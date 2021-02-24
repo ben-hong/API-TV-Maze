@@ -12,29 +12,28 @@ const $searchForm = $("#searchForm");
  *    (if no image URL given by API, put in a default image URL)
  */
 
-  async function getShowsByTerm(term) {
-  // ADD: Remove placeholder & make request to TVMaze search shows API.
-    let getRequest = await axios.get(`http://api.tvmaze.com/search/shows`, {
-      params: {
-        q: term
-      }
-    })
-
-    let showData = getRequest.data;
-    let showList = [];
-    for (let data of showData) {
-      let showSearchObj = data.show;
-      let {id, name, summary, image} = showSearchObj;
-      if (image === null) {
-        image = 'https://tinyurl.com/tv-missing';
-      } else {
-        image = image.medium;
-      }
-      showList.push({id, name, summary, image});
+async function getShowsByTerm(term) {
+// ADD: Remove placeholder & make request to TVMaze search shows API.
+  let getRequest = await axios.get(`http://api.tvmaze.com/search/shows`, {
+    params: {
+      q: term
     }
+  })
 
-    return showList;
-    
+  let showData = getRequest.data;
+  let showList = [];
+  for (let data of showData) {
+    let showSearchObj = data.show;
+    let {id, name, summary, image} = showSearchObj;
+    if (image === null) {
+      image = 'https://tinyurl.com/tv-missing';
+    } else {
+      image = image.medium;
+    }
+    showList.push({id, name, summary, image});
+  }
+
+  return showList;
 }
 
 
@@ -88,8 +87,31 @@ $searchForm.on("submit", async function (evt) {
  *      { id, name, season, number }
  */
 
-// async function getEpisodesOfShow(id) { }
+async function getEpisodesOfShow(id) { 
+  let episodeRequest = await axios.get(`http://api.tvmaze.com/shows/${id}/episodes`);
+  let episodeData = episodeRequest.data;
+  let episodeArr =[];
+  for (let num of episodeData){
+    let {id, name, season, number} = num;
+    episodeArr.push({id, name, season, number});
+  }
+  console.log(episodeArr);
+  return episodeArr;
+}
+
 
 /** Write a clear docstring for this function... */
 
-// function populateEpisodes(episodes) { }
+function populateEpisodes(episodes) { 
+  for (let episode of episodes){
+    $("#episodesList").append(`<li>${episode.name}(season ${episode.season}, number ${episode.number})</li>`);
+  }
+}
+
+$showsList.on("click", ".btn", async (e) => {
+  $("#episodesList").empty();
+  $episodesArea.show();
+  let id = $(e.target).closest(".Show").data().showId;
+  let episodes = await getEpisodesOfShow(id);
+  populateEpisodes(episodes);
+})
